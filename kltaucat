@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Tính khối lượng tàu cát</title>
+
+<style>
+body {
+  background:#0f0f0f;
+  color:#eee;
+  font-family:Arial, sans-serif;
+  padding:14px;
+}
+h1 { font-size:22px; }
+h2 {
+  font-size:16px;
+  margin-top:18px;
+  color:#8fd3ff;
+}
+input {
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+  font-size:15px;
+  background:#1c1c1c;
+  color:#fff;
+  border:1px solid #444;
+}
+button {
+  width:100%;
+  padding:14px;
+  margin-top:22px;
+  font-size:16px;
+  background:#007aff;
+  border:none;
+  color:white;
+}
+.result {
+  margin-top:20px;
+  line-height:1.6;
+  font-size:15px;
+  color:#7CFF7C;
+}
+.warn {
+  margin-top:12px;
+  color:#ff9f43;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>TÍNH KHỐI LƯỢNG TÀU CÁT</h1>
+
+<h2>1. Kích thước thùng</h2>
+<input id="L" placeholder="Chiều dài thùng L (m)">
+<input id="W" placeholder="Chiều rộng thùng W (m)">
+<input id="H" placeholder="Chiều cao thùng H (m)">
+
+<h2>2. Phần cát nhô </h2>
+<input id="L1" placeholder="Chiều dài đáy dưới L1 (m)">
+<input id="L2" placeholder="Chiều dài đáy trên L2 (m)">
+<input id="hc" placeholder="Chiều cao cát nhô h (m)">
+
+<h2>3. Phần rỗng phía trước</h2>
+<input id="Lf" placeholder="Chiều dài rỗng trước (m)">
+<input id="Wf" placeholder="Chiều rộng rỗng trước (m)">
+<input id="hf" placeholder="Từ miệng thùng xuống mặt cát (m)">
+
+<h2>4. Phần rỗng phía sau</h2>
+<input id="Ls" placeholder="Chiều dài rỗng sau (m)">
+<input id="Ws" placeholder="Chiều rộng rỗng sau (m)">
+<input id="hs" placeholder="Từ miệng thùng xuống mặt cát (m)">
+
+<h2>5. Khối lượng riêng cát</h2>
+<input id="rho" placeholder="ρ (tấn/m³), ví dụ 1.6">
+
+<button onclick="tinh()">TÍNH KHỐI LƯỢNG</button>
+
+<div class="warn" id="warn"></div>
+<div class="result" id="out"></div>
+
+<script>
+function v(id){
+  return parseFloat(document.getElementById(id).value) || 0;
+}
+
+function tinh(){
+  warn.innerText = "";
+  out.innerHTML = "";
+
+  let L = v("L"), W = v("W"), H = v("H");
+  let L1 = v("L1"), L2 = v("L2"), hc = v("hc");
+  let Lf = v("Lf"), Wf = v("Wf"), hf = v("hf");
+  let Ls = v("Ls"), Ws = v("Ws"), hs = v("hs");
+  let rho = v("rho");
+
+  // kiểm tra cơ bản
+  if (L<=0 || W<=0 || H<=0 || rho<=0){
+    warn.innerText = "⚠️ Kích thước thùng và khối lượng riêng phải > 0.";
+    return;
+  }
+
+  if (hf > H || hs > H){
+    warn.innerText = "⚠️ Chiều cao phần rỗng vượt chiều cao thùng.";
+    return;
+  }
+
+  let V_thung = L * W * H;
+
+  // ===== CÁT NHÔ =====
+  let V_cat_nho = 0;
+
+  // chỉ tính khi thật sự có nhô
+  if (hc > 0 && L1 > 0){
+    if (L2 < 0){
+      warn.innerText = "⚠️ L2 không thể âm.";
+      return;
+    }
+    if (L2 > L1){
+      warn.innerText = "⚠️ Đáy trên L2 không được dài hơn đáy dưới L1.";
+      return;
+    }
+
+    V_cat_nho = W * (L1 + L2) * hc / 2;
+  }
+
+  // ===== PHẦN RỖNG =====
+  let V_rong_truoc = Lf * Wf * hf;
+  let V_rong_sau   = Ls * Ws * hs;
+
+  let V_cat = V_thung + V_cat_nho - V_rong_truoc - V_rong_sau;
+
+  if (V_cat <= 0){
+    warn.innerText = "⚠️ Thể tích cát ≤ 0, kiểm tra lại số đo.";
+    return;
+  }
+
+  let M = V_cat * rho;
+
+  out.innerHTML = `
+    Thể tích thùng: ${V_thung.toFixed(2)} m³<br>
+    Thể tích cát nhô: ${V_cat_nho.toFixed(2)} m³<br>
+    Thể tích rỗng trước: ${V_rong_truoc.toFixed(2)} m³<br>
+    Thể tích rỗng sau: ${V_rong_sau.toFixed(2)} m³<br><br>
+    <b>Thể tích cát thực: ${V_cat.toFixed(2)} m³</b><br>
+    <b>Khối lượng cát: ${M.toFixed(2)} tấn</b>
+  `;
+}
+</script>
+
+</body>
+</html>
